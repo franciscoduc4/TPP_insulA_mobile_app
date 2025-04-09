@@ -1,0 +1,41 @@
+import * as React from 'react';
+import { PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+
+const paperTheme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: '#4CAF50',
+    secondary: '#81C784',
+    background: '#F5F5F5',
+    text: '#333333',
+    textSecondary: '#666666',
+  },
+};
+
+const navigationTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: '#4CAF50',
+    background: '#F5F5F5',
+    text: '#333333',
+    border: '#E5E5E5',
+    card: '#FFFFFF',
+  },
+};
+
+interface ThemeProviderProps {
+  children: React.ReactNode;
+}
+
+export function ThemeProvider({ children }: ThemeProviderProps) {
+  return (
+    <PaperProvider theme={paperTheme}>
+      <NavigationContainer theme={navigationTheme}>
+        {children}
+      </NavigationContainer>
+    </PaperProvider>
+  );
+}
