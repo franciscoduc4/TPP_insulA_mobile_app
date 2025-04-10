@@ -376,6 +376,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginTop: 30,
   },
   title: {
     fontSize: 24,
@@ -385,6 +386,7 @@ const styles = StyleSheet.create({
   settingsButton: {
     padding: 8,
     borderRadius: 20,
+    marginTop: 30,
   },
   statusContainer: {
     flexDirection: 'row',

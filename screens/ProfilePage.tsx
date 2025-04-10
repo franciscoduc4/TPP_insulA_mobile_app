@@ -2,25 +2,33 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Settings, User, Bell, ChevronRight, LogOut } from 'lucide-react-native';
 import { Footer } from "../components/footer";
+import { ProfilePhoto } from '../components/profile-photo';
+import { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 
 export default function ProfilePage() {
+
+    const [profileImage, setProfileImage] = useState<string | null>(null);
+    const navigation = useNavigation();
+
   const handleLogout = () => {
-    // Handle logout logic
+    // On logout send to login screen
+    // This is a placeholder for the logout functionality
+    console.log('Logout button pressed');
+    // You can navigate to the login screen here
+    // For example: navigation.navigate('Login');
+    // Or use a context or state management to handle logout
+    navigation.navigate('Login');
   };
+
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        <View style={styles.header}>
-          <Text style={styles.title}>Perfil</Text>
-        </View>
 
         <View style={styles.content}>
           <View style={styles.profileSection}>
-            <Image
-              source={{ uri: 'https://via.placeholder.com/100' }}
-              style={styles.avatar}
-            />
+          <ProfilePhoto imageUri={profileImage} onImageChange={setProfileImage} />
             <View style={styles.profileInfo}>
               <Text style={styles.name}>Juan Pérez</Text>
               <Text style={styles.email}>juan.perez@example.com</Text>

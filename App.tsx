@@ -33,7 +33,13 @@ export default function App() {
             }}
           />
           <Stack.Screen name="Signup" component={SignupScreen} />
-          <Stack.Screen name="Dashboard" component={DashboardScreen} />
+          <Stack.Screen
+            name="Dashboard"
+            component={DashboardScreen}
+            options={{
+              headerShown: false
+            }}
+          />
           <Stack.Screen name="Meals" component={MealsPage} />
           <Stack.Screen name="History" component={HistoryPage} />
           <Stack.Screen name="Insulin" component={InsulinPage} />
