@@ -10,6 +10,7 @@ import MealsPage from './screens/MealsPage';
 import HistoryPage from './screens/HistoryPage';
 import InsulinPage from './screens/InsulinPage';
 import ProfilePage from './screens/ProfilePage';
+import ForgotPasswordPage from './screens/ForgotPasswordPage';
 import { BackButton } from './components/back-button';
 
 const Stack = createNativeStackNavigator();
@@ -32,7 +33,13 @@ export default function App() {
               headerShown: false
             }}
           />
-          <Stack.Screen name="Signup" component={SignupScreen} />
+          <Stack.Screen 
+            name="Signup" 
+            component={SignupScreen} 
+            options={{
+              headerShown: false
+            }}
+          />
           <Stack.Screen
             name="Dashboard"
             component={DashboardScreen}
@@ -40,10 +47,41 @@ export default function App() {
               headerShown: false
             }}
           />
-          <Stack.Screen name="Meals" component={MealsPage} />
-          <Stack.Screen name="History" component={HistoryPage} />
-          <Stack.Screen name="Insulin" component={InsulinPage} />
-          <Stack.Screen name="Profile" component={ProfilePage} />
+          <Stack.Screen
+            name="ForgotPasswordPage"
+            component={ForgotPasswordPage}
+            options={{
+              headerShown: false
+            }}
+          />
+          <Stack.Screen
+            name="Meals"
+            component={MealsPage}
+            options={{
+              headerShown: false
+            }}
+          />
+          <Stack.Screen
+            name="History"
+            component={HistoryPage}
+            options={{
+              headerShown: false
+            }}
+          />
+          <Stack.Screen
+            name="Insulin"
+            component={InsulinPage}
+            options={{
+              headerShown: false
+            }}
+          />
+          <Stack.Screen
+            name="Profile"
+            component={ProfilePage}
+            options={{
+              headerShown: false
+            }}
+          />
         </Stack.Navigator>
         <StatusBar style="auto" />
       </ThemeProvider>

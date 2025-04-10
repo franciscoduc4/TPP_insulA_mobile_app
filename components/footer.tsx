@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
+import { Calculator } from 'lucide-react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type RootStackParamList = {
@@ -45,7 +46,7 @@ export function Footer() {
 
       <TouchableOpacity style={styles.tab} onPress={() => navigation.navigate('Insulin')}>
         <View style={styles.tabContent}>
-          <Icon name="activity" size={20} color={isActive('Insulin') ? '#22c55e' : '#666'} />
+          <Calculator size={20} color={isActive('Insulin') ? '#22c55e' : '#666'} />
           <Text style={[styles.label, isActive('Insulin') && styles.activeLabel]}>Insulina</Text>
         </View>
       </TouchableOpacity>

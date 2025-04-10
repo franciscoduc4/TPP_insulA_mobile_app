@@ -1,9 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { GlucoseTrendsChart } from '../components/glucose-trends-chart';
 import DailyPatternChart from '../components/daily-pattern-chart';
 import { EventList } from '../components/event-list';
 import { Footer } from "../components/footer";
+import { BackButton } from '../components/back-button';
+import { useNavigation } from '@react-navigation/native';
+import { Activity, TrendingUp, Calendar, ListChecks } from 'lucide-react-native';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../components/ui/accordion-native';
 
 interface Event {
   id: number;
@@ -59,35 +63,72 @@ const mockDailyPatternData = [
 ];
 
 export default function HistoryPage() {
+  const navigation = useNavigation();
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
-          <Text style={styles.title}>Historial</Text>
+          <View style={styles.titleContainer}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <BackButton />
+            </TouchableOpacity>
+            <Activity width={32} height={32} color="#22c55e" />
+            <Text style={styles.title}>Historial</Text>
+          </View>
           <Text style={styles.subtitle}>Registros y tendencias de glucosa</Text>
         </View>
+        
         <View style={styles.content}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Tendencias de Glucosa</Text>
-            <View style={styles.card}>
-              <GlucoseTrendsChart 
-                data={mockGlucoseData}
-                timeRange="day"
-              />
-            </View>
-          </View>
+          <Accordion>
+            <AccordionItem value="trends">
+              <AccordionTrigger>
+                <View style={styles.accordionHeader}>
+                  <TrendingUp size={20} color="#6b7280" />
+                  <Text style={styles.sectionTitle}>Tendencias de Glucosa</Text>
+                </View>
+              </AccordionTrigger>
+              <AccordionContent>
+                <View style={styles.card}>
+                  <GlucoseTrendsChart 
+                    data={mockGlucoseData}
+                    timeRange="day"
+                  />
+                </View>
+              </AccordionContent>
+            </AccordionItem>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Patrón Diario</Text>
-            <View style={styles.card}>
-              <DailyPatternChart data={mockDailyPatternData} />
-            </View>
-          </View>
+            <AccordionItem value="patterns">
+              <AccordionTrigger>
+                <View style={styles.accordionHeader}>
+                  <Calendar size={20} color="#6b7280" />
+                  <Text style={styles.sectionTitle}>Patrón Diario</Text>
+                </View>
+              </AccordionTrigger>
+              <AccordionContent>
+                <View style={styles.card}>
+                  <DailyPatternChart data={mockDailyPatternData} />
+                </View>
+              </AccordionContent>
+            </AccordionItem>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Eventos Recientes</Text>
-            <EventList events={mockEvents} />
-          </View>
+            <AccordionItem value="events">
+              <AccordionTrigger>
+                <View style={styles.accordionHeader}>
+                  <ListChecks size={20} color="#6b7280" />
+                  <Text style={styles.sectionTitle}>Eventos Recientes</Text>
+                </View>
+              </AccordionTrigger>
+              <AccordionContent>
+                <View style={styles.card}>
+                  <EventList events={mockEvents} />
+                </View>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </View>
       </ScrollView>
       <Footer />
@@ -101,45 +142,60 @@ const styles = StyleSheet.create({
     backgroundColor: '#f4f4f5',
   },
   header: {
-    padding: 16,
-    backgroundColor: '#ffffff',
+    width: '100%',
+    backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
+    alignItems: 'center',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 8,
+    position: 'relative',
+    width: '100%',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    marginTop: 30,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 1,
+    alignSelf: 'center',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#111827',
-    marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
     color: '#6b7280',
+    marginBottom: 16,
   },
   content: {
     padding: 16,
-    gap: 24,
+    paddingBottom: 80, // Add space for footer
   },
-  section: {
-    gap: 16,
+  accordionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#111827',
+    marginLeft: 8,
   },
   card: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    marginTop: 8,
   },
 });
 

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { Loader2, ArrowUp, ArrowDown, Check, Utensils, Syringe, Droplet, Plus, MessageCircle, Activity, Settings } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
 import { ChatInterface } from "../components/chat-interface";
 import { Footer } from "../components/footer";
@@ -57,6 +59,7 @@ const mockActivities: Activity[] = [
     timestamp: null
   }
 ];
+
 
 export default function DashboardScreen() {
   const [openDialog, setOpenDialog] = useState(false);
@@ -342,15 +345,16 @@ export default function DashboardScreen() {
           </View>
         </Modal>
 
-        <TouchableOpacity
-          style={styles.chatButton}
-          onPress={() => setIsChatOpen(true)}
-        >
-          <MessageCircle width={24} height={24} color="white" />
-        </TouchableOpacity>
-
-        <ChatInterface isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       </ScrollView>
+
+      <TouchableOpacity
+        style={styles.chatButton}
+        onPress={() => setIsChatOpen(true)}
+      >
+        <MessageCircle width={24} height={24} color="white" />
+      </TouchableOpacity>
+
+      <ChatInterface isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       <Footer />
     </View>
   );
@@ -696,7 +700,7 @@ const styles = StyleSheet.create({
   },
   chatButton: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 100,
     right: 16,
     backgroundColor: '#22c55e',
     width: 56,
@@ -709,5 +713,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    zIndex: 1000,
   },
 });

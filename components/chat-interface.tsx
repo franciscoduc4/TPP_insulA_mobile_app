@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from "react"
-import { View, Text, TextInput, ScrollView, StyleSheet, Modal, TouchableOpacity } from "react-native"
-import { Feather } from '@expo/vector-icons'
-import { Button } from "@/components/ui/button"
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, Modal, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { Button } from './ui/button';
 
 // Types for our chat messages
 type MessageType = {
@@ -103,12 +103,12 @@ export function ChatInterface({ isOpen, onClose }: { isOpen: boolean; onClose: (
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconContainer}>
-                <Feather name="cpu" size={20} color="#000" />
+                <Feather name="cpu" size={20} color="#22c55e" />
               </View>
               <Text style={styles.headerTitle}>Asistente de Salud</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Feather name="x" size={20} color="#000" />
+              <Feather name="x" size={20} color="#22c55e" />
             </TouchableOpacity>
           </View>
 
@@ -204,13 +204,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconContainer: {
-    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+    backgroundColor: 'rgba(34, 197, 94, 0.1)', // #22c55e with 0.1 opacity
     padding: 8,
     borderRadius: 20,
   },
   headerTitle: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#22c55e',
   },
   closeButton: {
     padding: 8,
@@ -232,17 +233,17 @@ const styles = StyleSheet.create({
   },
   userMessage: {
     alignSelf: 'flex-end',
-    backgroundColor: '#0284c7',
+    backgroundColor: '#22c55e',
   },
   aiMessage: {
     alignSelf: 'flex-start',
-    backgroundColor: '#f3f4f6',
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
   },
   userMessageText: {
     color: '#fff',
   },
   aiMessageText: {
-    color: '#000',
+    color: '#111827',
   },
   timestamp: {
     fontSize: 12,
@@ -266,7 +267,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: '#22c55e',
     borderRadius: 20,
     paddingHorizontal: 16,
   },
@@ -274,6 +275,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: '#22c55e',
   },
 })
 

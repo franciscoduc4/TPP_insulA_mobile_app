@@ -6,7 +6,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 type RootStackParamList = {
   Login: undefined;
   Dashboard: undefined;
-  ForgotPassword: undefined;
+  ForgotPasswordPage: undefined;
   Signup: undefined;
 };
 
@@ -43,7 +43,11 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>insulA</Text>
+          <Image
+            source={require('../assets/insula-logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
         
         <View style={styles.card}>
@@ -88,8 +92,8 @@ export default function LoginScreen() {
               </View>
 
               <TouchableOpacity 
-                style={styles.forgotPasswordLink}
-                onPress={() => navigation.navigate('ForgotPassword')}
+                style={styles.forgotPasswordContainer}
+                onPress={() => navigation.navigate('ForgotPasswordPage')}
               >
                 <Text style={styles.forgotPasswordText}>
                   ¿Olvidaste tu contraseña?
@@ -147,7 +151,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: -10,
   },
   logo: {
     width: 120,
@@ -221,8 +225,8 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
   },
-  forgotPasswordLink: {
-    alignSelf: 'flex-end',
+  forgotPasswordContainer: {
+    alignItems: 'center',
     marginBottom: 16,
   },
   forgotPasswordText: {

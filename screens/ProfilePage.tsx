@@ -5,11 +5,17 @@ import { Footer } from "../components/footer";
 import { ProfilePhoto } from '../components/profile-photo';
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { NavigationProp } from '@react-navigation/native';
+
+type RootStackParamList = {
+  Login: undefined;
+  // Add other screen names here
+};
 
 export default function ProfilePage() {
 
     const [profileImage, setProfileImage] = useState<string | null>(null);
-    const navigation = useNavigation();
+    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const handleLogout = () => {
     // On logout send to login screen
@@ -117,6 +123,7 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   profileSection: {
+    marginTop:25,
     alignItems: 'center',
     marginBottom: 24,
   },

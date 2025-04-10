@@ -1,155 +1,320 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput } from 'react-native';
-import { PlusCircle } from 'lucide-react-native';
-import { PredictedDose } from '../components/predicted-dose';
-import { EventList } from '../components/event-list';
-import { Footer } from "../components/footer";
+import { Calculator } from 'lucide-react-native';
+import Icon from 'react-native-vector-icons/Feather';
+import { format } from 'date-fns';
+import { Card } from '../components/ui/card';
+import { BackButton } from '../components/back-button';
+import { Footer } from '../components/footer';
+import { useNavigation } from '@react-navigation/native';
 
-interface Event {
-  id: number;
-  timestamp: string;
-  description: string;
-  type: string;
-  units?: number;
+interface Recommendation {
+  total: number;
+  breakdown: {
+    correctionDose: number;
+    mealDose: number;
+    activityAdjustment: number;
+    timeAdjustment: number;
+  };
 }
 
-const mockEvents: Event[] = [
-  {
-    id: 1,
-    timestamp: '08:30',
-    description: 'Pre-desayuno',
-    type: 'bolus',
-    units: 4
-  },
-  {
-    id: 2,
-    timestamp: '13:00',
-    description: 'Pre-almuerzo',
-    type: 'bolus',
-    units: 6
-  },
-  {
-    id: 3,
-    timestamp: '22:00',
-    description: 'Dosis nocturna',
-    type: 'basal',
-    units: 12
-  }
+interface Prediction {
+  mealType: string;
+  date: Date;
+  carbs: number;
+  glucose: number;
+  units: number;
+  accuracy: 'Accurate' | 'Slightly low' | 'Low';
+}
+
+const activityOptions = [
+  'Ninguna',
+  'Ligera (30 min caminata)',
+  'Moderada (30 min trote)',
+  'Intensa (1hr ejercicio)'
+];
+
+const timeOptions = [
+  'Mañana (6:00-11:00)',
+  'Tarde (11:00-17:00)',
+  'Noche (17:00-22:00)',
+  'Madrugada (22:00-6:00)'
 ];
 
 export default function InsulinPage() {
-  const [events, setEvents] = useState<Event[]>(mockEvents);
-  const [showForm, setShowForm] = useState(false);
-  const [newEvent, setNewEvent] = useState<Partial<Event>>({
-    type: 'bolus',
-    units: 0,
-  });
+  const navigation = useNavigation();
+  const [currentGlucose, setCurrentGlucose] = useState('142');
+  const [carbs, setCarbs] = useState('45');
+  const [activity, setActivity] = useState(activityOptions[0]);
+  const [timeOfDay, setTimeOfDay] = useState(timeOptions[1]);
+  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAddEvent = () => {
-    if (newEvent.units && newEvent.type) {
-      const event: Event = {
-        id: events.length + 1,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        description: newEvent.description || '',
-        type: newEvent.type,
-        units: Number(newEvent.units)
-      };
-      setEvents([...events, event]);
-      setShowForm(false);
-      setNewEvent({ type: 'bolus', units: 0 });
+  const recentPredictions: Prediction[] = [
+    {
+      mealType: 'Lunch',
+      date: new Date(),
+      carbs: 45,
+      glucose: 142,
+      units: 4.2,
+      accuracy: 'Accurate'
+    },
+    {
+      mealType: 'Breakfast',
+      date: new Date(Date.now() - 7 * 60 * 60 * 1000),
+      carbs: 22,
+      glucose: 110,
+      units: 2.5,
+      accuracy: 'Accurate'
+    },
+    {
+      mealType: 'Dinner',
+      date: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      carbs: 60,
+      glucose: 135,
+      units: 5.8,
+      accuracy: 'Slightly low'
     }
+  ];
+
+  const handleCalculate = () => {
+    if (!currentGlucose || !carbs) return;
+    
+    setIsLoading(true);
+    // Simular cálculo con delay
+    setTimeout(() => {
+      setRecommendation({
+        total: 4.2,
+        breakdown: {
+          correctionDose: 1.2,
+          mealDose: 2.5,
+          activityAdjustment: -0.3,
+          timeAdjustment: 0.8
+        }
+      });
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  const handleLogDose = () => {
+    if (!recommendation) return;
+    // Aquí iría la lógica para guardar la dosis
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+      <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Registro del Día</Text>
-            <EventList events={events} />
+          <View style={styles.header}>
+            <View style={styles.titleContainer}>
+              <TouchableOpacity 
+                style={styles.backButton}
+                onPress={() => navigation.goBack()}
+              >
+                <BackButton />
+              </TouchableOpacity>
+              <Calculator width={32} height={32} color="#22c55e" />
+              <Text style={styles.title}>Insulina</Text>
+            </View>
+            <Text style={styles.description}>Calcula y registra tus dosis de insulina diarias</Text>
           </View>
 
-          {showForm ? (
-            <View style={styles.form}>
-              <View style={styles.formHeader}>
-                <Text style={styles.formTitle}>Nueva Dosis</Text>
-                <TouchableOpacity 
-                  style={styles.closeButton}
-                  onPress={() => setShowForm(false)}
-                >
-                  <Text style={styles.closeButtonText}>Cancelar</Text>
-                </TouchableOpacity>
-              </View>
-
+          {/* Calculator Card */}
+          <Card style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>Calculadora de Insulina</Text>
+            </View>
+            <View style={styles.cardContent}>
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Tipo</Text>
-                <View style={styles.typeButtons}>
-                  <TouchableOpacity
-                    style={[
-                      styles.typeButton,
-                      newEvent.type === 'bolus' && styles.typeButtonActive
-                    ]}
-                    onPress={() => setNewEvent({ ...newEvent, type: 'bolus' })}
-                  >
-                    <Text style={[
-                      styles.typeButtonText,
-                      newEvent.type === 'bolus' && styles.typeButtonTextActive
-                    ]}>Bolus</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.typeButton,
-                      newEvent.type === 'basal' && styles.typeButtonActive
-                    ]}
-                    onPress={() => setNewEvent({ ...newEvent, type: 'basal' })}
-                  >
-                    <Text style={[
-                      styles.typeButtonText,
-                      newEvent.type === 'basal' && styles.typeButtonTextActive
-                    ]}>Basal</Text>
-                  </TouchableOpacity>
+                <Text style={styles.label}>Nivel de Glucosa Actual</Text>
+                <View style={styles.inputGroup}>
+                  <TextInput
+                    style={styles.input}
+                    value={currentGlucose}
+                    onChangeText={setCurrentGlucose}
+                    keyboardType="numeric"
+                    placeholder="Ingrese lectura de glucosa"
+                  />
+                  <View style={styles.inputAddon}>
+                    <Text style={styles.inputAddonText}>mg/dL</Text>
+                  </View>
                 </View>
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Unidades</Text>
-                <TextInput
-                  style={styles.input}
-                  keyboardType="numeric"
-                  value={newEvent.units?.toString()}
-                  onChangeText={(value) => setNewEvent({ ...newEvent, units: Number(value) })}
-                  placeholder="0"
-                />
+                <Text style={styles.label}>Carbohidratos a Consumir</Text>
+                <View style={styles.inputGroup}>
+                  <TextInput
+                    style={styles.input}
+                    value={carbs}
+                    onChangeText={setCarbs}
+                    keyboardType="numeric"
+                    placeholder="Ingrese carbohidratos"
+                  />
+                  <View style={styles.inputAddon}>
+                    <Text style={styles.inputAddonText}>gramos</Text>
+                  </View>
+                </View>
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Notas (opcional)</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={newEvent.description}
-                  onChangeText={(value) => setNewEvent({ ...newEvent, description: value })}
-                  placeholder="Agregar notas..."
-                  multiline
-                  numberOfLines={4}
-                />
+                <Text style={styles.label}>Actividad Física Planificada</Text>
+                <TouchableOpacity 
+                  style={styles.select}
+                  onPress={() => {/* Implementar selector */}}
+                >
+                  <Text style={styles.selectText}>{activity}</Text>
+                  <Icon name="chevron-down" size={20} color="#6b7280" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Hora del Día</Text>
+                <TouchableOpacity 
+                  style={styles.select}
+                  onPress={() => {/* Implementar selector */}}
+                >
+                  <Text style={styles.selectText}>{timeOfDay}</Text>
+                  <Icon name="chevron-down" size={20} color="#6b7280" />
+                </TouchableOpacity>
               </View>
 
               <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleAddEvent}
+                style={[styles.button, styles.primaryButton]}
+                onPress={handleCalculate}
+                disabled={isLoading || !currentGlucose || !carbs}
               >
-                <Text style={styles.submitButtonText}>Guardar</Text>
+                {isLoading ? (
+                  <View>
+                    <Icon name="loader" size={20} color="white" />
+                  </View>
+                ) : (
+                  <Calculator size={20} color="white" />
+                )}
+                <Text style={styles.buttonText}>Calcular Dosis de Insulina</Text>
               </TouchableOpacity>
             </View>
-          ) : (
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => setShowForm(true)}
-            >
-              <PlusCircle size={24} color="#22c55e" />
-              <Text style={styles.addButtonText}>Registrar Dosis</Text>
-            </TouchableOpacity>
+          </Card>
+
+          {/* Recommendation Card */}
+          {recommendation && (
+            <Card style={styles.card}>
+              <View style={styles.cardContent}>
+                <View style={styles.recommendationHeader}>
+                  <View style={styles.iconContainer}>
+                    <Icon name="droplet" size={24} color="#22c55e" />
+                  </View>
+                  <View style={styles.recommendationContent}>
+                    <Text style={styles.recommendationTitle}>Dosis de Insulina Recomendada</Text>
+                    <View style={styles.recommendationValue}>
+                      <Text style={styles.recommendationNumber}>{recommendation.total}</Text>
+                      <Text style={styles.recommendationUnit}>unidades</Text>
+                    </View>
+                    <Text style={styles.recommendationSubtext}>
+                      Basado en tu glucosa actual y la comida planificada
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.breakdownSection}>
+                  <Text style={styles.breakdownTitle}>Cómo se calculó:</Text>
+                  <View style={styles.breakdownList}>
+                    <View style={styles.breakdownItem}>
+                      <Text style={styles.breakdownText}>Dosis de corrección (glucosa actual):</Text>
+                      <Text style={styles.breakdownValue}>{recommendation.breakdown.correctionDose} unidades</Text>
+                    </View>
+                    <View style={styles.breakdownItem}>
+                      <Text style={styles.breakdownText}>Dosis para comida ({carbs}g carbohidratos):</Text>
+                      <Text style={styles.breakdownValue}>{recommendation.breakdown.mealDose} unidades</Text>
+                    </View>
+                    <View style={styles.breakdownItem}>
+                      <Text style={styles.breakdownText}>Ajuste por actividad:</Text>
+                      <Text style={styles.breakdownValue}>{recommendation.breakdown.activityAdjustment} unidades</Text>
+                    </View>
+                    <View style={styles.breakdownItem}>
+                      <Text style={styles.breakdownText}>Ajuste por hora del día:</Text>
+                      <Text style={styles.breakdownValue}>{recommendation.breakdown.timeAdjustment} unidades</Text>
+                    </View>
+                    <View style={[styles.breakdownItem, styles.breakdownTotal]}>
+                      <Text style={[styles.breakdownText, styles.totalText]}>Dosis total recomendada:</Text>
+                      <Text style={[styles.breakdownValue, styles.totalValue]}>{recommendation.total} unidades</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.button, styles.outlineButton]}
+                  onPress={handleLogDose}
+                  disabled={isLoading}
+                >
+                  <Icon name="check" size={20} color="#22c55e" />
+                  <Text style={styles.outlineButtonText}>Registrar Esta Dosis</Text>
+                </TouchableOpacity>
+              </View>
+            </Card>
           )}
+
+          {/* Prediction Performance Card */}
+          <Card style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>Rendimiento de Predicciones</Text>
+            </View>
+            <View style={styles.cardContent}>
+              <View style={styles.performanceHeader}>
+                <View>
+                  <Text style={styles.performanceLabel}>Precisión de Predicciones</Text>
+                  <View style={styles.performanceValue}>
+                    <Text style={styles.performanceNumber}>92%</Text>
+                    <View style={styles.performanceBadge}>
+                      <Icon name="trending-up" size={12} color="#22c55e" />
+                      <Text style={styles.performanceBadgeText}>3% este mes</Text>
+                    </View>
+                  </View>
+                </View>
+                <View style={styles.miniChart}>
+                  {/* Mini chart placeholder */}
+                </View>
+              </View>
+
+              <Text style={styles.performanceDescription}>
+                El modelo está aprendiendo continuamente de tus respuestas glucémicas y mejorando sus predicciones.
+                La precisión reciente ha aumentado a medida que el modelo se adapta a tus patrones.
+              </Text>
+
+              <Text style={styles.sectionTitle}>Predicciones Recientes</Text>
+
+              <View style={styles.predictionsList}>
+                {recentPredictions.map((prediction, index) => (
+                  <View key={index} style={styles.predictionItem}>
+                    <View>
+                      <Text style={styles.predictionTitle}>
+                        {prediction.mealType} - {format(prediction.date, 'MMM dd, p')}
+                      </Text>
+                      <Text style={styles.predictionDetails}>
+                        {prediction.carbs}g carbohidratos, {prediction.glucose} mg/dL
+                      </Text>
+                    </View>
+                    <View style={styles.predictionRight}>
+                      <Text style={styles.predictionUnits}>{prediction.units} unidades</Text>
+                      <Text style={[
+                        styles.predictionAccuracy,
+                        prediction.accuracy === 'Accurate' && styles.accuracyGood,
+                        prediction.accuracy === 'Slightly low' && styles.accuracyWarning,
+                        prediction.accuracy === 'Low' && styles.accuracyBad
+                      ]}>
+                        {prediction.accuracy === 'Accurate' ? 'Precisa' : 
+                         prediction.accuracy === 'Slightly low' ? 'Ligeramente baja' : 'Baja'}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+
+              <TouchableOpacity style={[styles.button, styles.linkButton]}>
+                <Text style={styles.linkButtonText}>Ver Todas las Predicciones</Text>
+              </TouchableOpacity>
+            </View>
+          </Card>
         </View>
       </ScrollView>
       <Footer />
@@ -162,58 +327,75 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f4f4f5',
   },
+  scrollView: {
+    flex: 1,
+  },
   content: {
-    padding: 16,
-    gap: 24,
+    flex: 1,
   },
-  section: {
-    gap: 16,
+  header: {
+    width: '100%',
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  addButton: {
+  titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
+    marginBottom: 8,
+    position: 'relative',
+    width: '100%',
     justifyContent: 'center',
-    padding: 16,
-    backgroundColor: 'white',
-    borderWidth: 2,
-    borderColor: '#22c55e',
-    borderRadius: 8,
-    borderStyle: 'dashed',
+    paddingVertical: 8,
+    marginTop: 30,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 0,
+    zIndex: 1,
+    alignSelf: 'center',
+  },
+  titleSection: {
+    alignItems: 'center',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
-  addButtonText: {
-    color: '#22c55e',
-    fontSize: 16,
-    fontWeight: '500',
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#111827',
   },
-  form: {
+  description: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  card: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
     gap: 20,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    marginTop: 15,
   },
-  formHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  cardHeader: {
     marginBottom: 16,
   },
-  formTitle: {
+  cardTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#111827',
   },
-  closeButton: {
-    padding: 8,
-  },
-  closeButtonText: {
-    color: '#6b7280',
-    fontSize: 14,
+  cardContent: {
+    gap: 16,
   },
   formGroup: {
     gap: 8,
@@ -223,49 +405,226 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#111827',
   },
+  inputGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   input: {
+    flex: 1,
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
   },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  typeButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  typeButton: {
-    flex: 1,
+  inputAddon: {
     padding: 12,
+    backgroundColor: '#f3f4f6',
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+  inputAddonText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  select: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 8,
+    padding: 12,
+    backgroundColor: 'white',
+  },
+  selectText: {
+    fontSize: 16,
+    color: '#111827',
+  },
+  button: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 8,
+    gap: 8,
   },
-  typeButtonActive: {
+  primaryButton: {
     backgroundColor: '#22c55e',
-    borderColor: '#22c55e',
   },
-  typeButtonText: {
-    color: '#6b7280',
+  buttonText: {
+    color: 'white',
     fontSize: 16,
     fontWeight: '500',
   },
-  typeButtonTextActive: {
-    color: 'white',
+  recommendationHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 16,
   },
-  submitButton: {
-    backgroundColor: '#22c55e',
-    padding: 16,
+  recommendationContent: {
+    flex: 1,
+  },
+  iconContainer: {
+    padding: 12,
+    backgroundColor: '#f3f4f6',
     borderRadius: 8,
+  },
+  recommendationTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  recommendationValue: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+  },
+  recommendationNumber: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#22c55e',
+  },
+  recommendationUnit: {
+    fontSize: 16,
+    color: '#6b7280',
+  },
+  recommendationSubtext: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  breakdownSection: {
+    gap: 16,
+  },
+  breakdownTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  breakdownList: {
+    gap: 8,
+  },
+  breakdownItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  breakdownText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  breakdownValue: {
+    fontSize: 14,
+    color: '#111827',
+  },
+  breakdownTotal: {
+    borderTopWidth: 1,
+    borderTopColor: '#d1d5db',
+    paddingTop: 8,
+  },
+  totalText: {
+    fontWeight: '600',
+  },
+  totalValue: {
+    fontWeight: '600',
+  },
+  outlineButton: {
+    borderWidth: 1,
+    borderColor: '#22c55e',
+    backgroundColor: 'white',
+  },
+  outlineButtonText: {
+    color: '#22c55e',
+  },
+  performanceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 16,
+  },
+  performanceLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  performanceValue: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+  },
+  performanceNumber: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#22c55e',
+  },
+  performanceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    padding: 4,
+  },
+  performanceBadgeText: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  miniChart: {
+    width: 50,
+    height: 50,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+  },
+  performanceDescription: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  predictionsList: {
+    gap: 16,
+  },
+  predictionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  submitButtonText: {
-    color: 'white',
+  predictionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  predictionDetails: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  predictionRight: {
+    alignItems: 'flex-end',
+  },
+  predictionUnits: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  predictionAccuracy: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  accuracyGood: {
+    color: '#22c55e',
+  },
+  accuracyWarning: {
+    color: '#f59e0b',
+  },
+  accuracyBad: {
+    color: '#ef4444',
+  },
+  linkButton: {
+    backgroundColor: 'transparent',
+  },
+  linkButtonText: {
+    color: '#22c55e',
     fontSize: 16,
     fontWeight: '500',
   },

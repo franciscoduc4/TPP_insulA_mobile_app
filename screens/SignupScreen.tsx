@@ -11,31 +11,91 @@ type RootStackParamList = {
 
 type SignupScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Signup'>;
 
+type GlucoseProfile = 'hypo' | 'hyper' | 'normal';
+
 export default function SignupScreen() {
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     confirmPassword: "",
     firstName: "",
     lastName: "",
-    birthDate: "",
+    birthDay: "",
+    birthMonth: "",
+    birthYear: "",
     weight: "",
     height: "",
+    glucoseProfile: "" as GlucoseProfile,
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation<SignupScreenNavigationProp>();
 
+  const validateStep = () => {
+    switch (step) {
+      case 1:
+        if (!formData.email || !formData.password || !formData.confirmPassword) {
+          setError("Por favor completa todos los campos");
+          return false;
+        }
+        if (formData.password !== formData.confirmPassword) {
+          setError("Las contraseñas no coinciden");
+          return false;
+        }
+        break;
+      case 2:
+        const { birthDay, birthMonth, birthYear } = formData;
+        if (!formData.firstName || !formData.lastName || 
+            !birthDay || !birthMonth || !birthYear || 
+            !formData.weight || !formData.height) {
+          setError("Por favor completa todos los campos");
+          return false;
+        }
+        
+        // Validar fecha
+        const day = parseInt(birthDay);
+        const month = parseInt(birthMonth);
+        const year = parseInt(birthYear);
+        const date = new Date(year, month - 1, day);
+        
+        if (date.getDate() !== day || 
+            date.getMonth() !== month - 1 || 
+            date.getFullYear() !== year ||
+            date > new Date()) {
+          setError("Fecha de nacimiento inválida");
+          return false;
+        }
+        break;
+      case 3:
+        if (!formData.glucoseProfile) {
+          setError("Por favor selecciona tu perfil glucémico");
+          return false;
+        }
+        break;
+    }
+    return true;
+  };
+
+  const handleNextStep = () => {
+    if (validateStep()) {
+      setError("");
+      setStep(step + 1);
+    }
+  };
+
+  const handlePrevStep = () => {
+    setError("");
+    setStep(step - 1);
+  };
+
   const handleSubmit = async () => {
+    if (!validateStep()) return;
+    
     setIsLoading(true);
     setError("");
 
     try {
-      // Validaciones básicas
-      if (formData.password !== formData.confirmPassword) {
-        throw new Error("Las contraseñas no coinciden");
-      }
-
       // Simulación de registro
       await new Promise((resolve) => setTimeout(resolve, 1000));
       navigation.navigate('Dashboard');
@@ -48,7 +108,228 @@ export default function SignupScreen() {
   };
 
   const handleChange = (name: string, value: string) => {
+    if ((name === 'birthDay' || name === 'birthMonth') && value.length > 2) {
+      return;
+    }
+    if (name === 'birthYear' && value.length > 4) {
+      return;
+    }
+    
+    // Validar que solo se ingresen números
+    if ((name === 'birthDay' || name === 'birthMonth' || name === 'birthYear') && !/^\d*$/.test(value)) {
+      return;
+    }
+
+    // Validar rangos
+    if (name === 'birthDay' && parseInt(value) > 31) {
+      return;
+    }
+    if (name === 'birthMonth' && parseInt(value) > 12) {
+      return;
+    }
+    if (name === 'birthYear') {
+      const currentYear = new Date().getFullYear();
+      if (value.length === 4 && (parseInt(value) > currentYear || parseInt(value) < 1900)) {
+        return;
+      }
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const renderStepContent = () => {
+    switch (step) {
+      case 1:
+        return (
+          <>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="tu@email.com"
+                value={formData.email}
+                onChangeText={(value) => handleChange("email", value)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                editable={!isLoading}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Contraseña</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Tu contraseña"
+                value={formData.password}
+                onChangeText={(value) => handleChange("password", value)}
+                secureTextEntry
+                editable={!isLoading}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Confirmar Contraseña</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Confirma tu contraseña"
+                value={formData.confirmPassword}
+                onChangeText={(value) => handleChange("confirmPassword", value)}
+                secureTextEntry
+                editable={!isLoading}
+              />
+            </View>
+          </>
+        );
+
+      case 2:
+        return (
+          <>
+            <View style={styles.row}>
+              <View style={[styles.inputContainer, styles.halfWidth]}>
+                <Text style={styles.label}>Nombre</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Tu nombre"
+                  value={formData.firstName}
+                  onChangeText={(value) => handleChange("firstName", value)}
+                  editable={!isLoading}
+                />
+              </View>
+
+              <View style={[styles.inputContainer, styles.halfWidth]}>
+                <Text style={styles.label}>Apellido</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Tu apellido"
+                  value={formData.lastName}
+                  onChangeText={(value) => handleChange("lastName", value)}
+                  editable={!isLoading}
+                />
+              </View>
+            </View>
+
+            <Text style={styles.label}>Fecha de Nacimiento</Text>
+            <View style={styles.dateContainer}>
+              <View style={styles.dateInput}>
+                <TextInput
+                  style={[styles.input, styles.dateField]}
+                  placeholder="DD"
+                  value={formData.birthDay}
+                  onChangeText={(value) => handleChange("birthDay", value)}
+                  keyboardType="numeric"
+                  maxLength={2}
+                  editable={!isLoading}
+                />
+              </View>
+              <Text style={styles.dateSeparator}>/</Text>
+              <View style={styles.dateInput}>
+                <TextInput
+                  style={[styles.input, styles.dateField]}
+                  placeholder="MM"
+                  value={formData.birthMonth}
+                  onChangeText={(value) => handleChange("birthMonth", value)}
+                  keyboardType="numeric"
+                  maxLength={2}
+                  editable={!isLoading}
+                />
+              </View>
+              <Text style={styles.dateSeparator}>/</Text>
+              <View style={[styles.dateInput, styles.yearInput]}>
+                <TextInput
+                  style={[styles.input, styles.dateField]}
+                  placeholder="AAAA"
+                  value={formData.birthYear}
+                  onChangeText={(value) => handleChange("birthYear", value)}
+                  keyboardType="numeric"
+                  maxLength={4}
+                  editable={!isLoading}
+                />
+              </View>
+            </View>
+
+            <View style={styles.row}>
+              <View style={[styles.inputContainer, styles.halfWidth]}>
+                <Text style={styles.label}>Peso (kg)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="70"
+                  value={formData.weight}
+                  onChangeText={(value) => handleChange("weight", value)}
+                  keyboardType="numeric"
+                  editable={!isLoading}
+                />
+              </View>
+
+              <View style={[styles.inputContainer, styles.halfWidth]}>
+                <Text style={styles.label}>Altura (cm)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="170"
+                  value={formData.height}
+                  onChangeText={(value) => handleChange("height", value)}
+                  keyboardType="numeric"
+                  editable={!isLoading}
+                />
+              </View>
+            </View>
+          </>
+        );
+
+      case 3:
+        return (
+          <View style={styles.profileContainer}>
+            <Text style={styles.label}>Selecciona tu perfil glucémico:</Text>
+            
+            <TouchableOpacity
+              style={[
+                styles.profileButton,
+                formData.glucoseProfile === 'hypo' && styles.profileButtonSelected
+              ]}
+              onPress={() => handleChange("glucoseProfile", "hypo")}
+            >
+              <Text style={[
+                styles.profileButtonText,
+                formData.glucoseProfile === 'hypo' && styles.profileButtonTextSelected
+              ]}>Tendencia a Hipoglucemia</Text>
+              <Text style={styles.glucoseValueText}>
+                {'< 70 mg/dL'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.profileButton,
+                formData.glucoseProfile === 'normal' && styles.profileButtonSelected
+              ]}
+              onPress={() => handleChange("glucoseProfile", "normal")}
+            >
+              <Text style={[
+                styles.profileButtonText,
+                formData.glucoseProfile === 'normal' && styles.profileButtonTextSelected
+              ]}>Nivel Normal</Text>
+              <Text style={styles.glucoseValueText}>
+                {'70 - 180 mg/dL'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.profileButton,
+                formData.glucoseProfile === 'hyper' && styles.profileButtonSelected
+              ]}
+              onPress={() => handleChange("glucoseProfile", "hyper")}
+            >
+              <Text style={[
+                styles.profileButtonText,
+                formData.glucoseProfile === 'hyper' && styles.profileButtonTextSelected
+              ]}>Tendencia a Hiperglucemia</Text>
+              <Text style={styles.glucoseValueText}>
+                {'> 180 mg/dL'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        );
+    }
   };
 
   return (
@@ -56,19 +337,32 @@ export default function SignupScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.logoContainer}>
           <Image 
-            source={require('../assets/logo-fiuba.png')}
+            source={require('../assets/insula-logo.png')}
             style={styles.logo}
             resizeMode="contain"
           />
-          <Text style={styles.logoText}>insulA</Text>
         </View>
         
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.title}>Crear Cuenta</Text>
             <Text style={styles.description}>
-              Completa tus datos para comenzar
+              {step === 1 && "Ingresa tus credenciales"}
+              {step === 2 && "Completa tu información personal"}
+              {step === 3 && "Selecciona tu perfil glucémico"}
             </Text>
+            <View style={styles.stepIndicator}>
+              {[1, 2, 3].map((s) => (
+                <View
+                  key={s}
+                  style={[
+                    styles.stepDot,
+                    s === step && styles.stepDotActive,
+                    s < step && styles.stepDotCompleted,
+                  ]}
+                />
+              ))}
+            </View>
           </View>
 
           <View style={styles.cardContent}>
@@ -79,113 +373,38 @@ export default function SignupScreen() {
             ) : null}
 
             <View style={styles.form}>
-              <View style={styles.row}>
-                <View style={[styles.inputContainer, styles.halfWidth]}>
-                  <Text style={styles.label}>Nombre</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Tu nombre"
-                    value={formData.firstName}
-                    onChangeText={(value) => handleChange("firstName", value)}
-                    editable={!isLoading}
-                  />
-                </View>
+              {renderStepContent()}
 
-                <View style={[styles.inputContainer, styles.halfWidth]}>
-                  <Text style={styles.label}>Apellido</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Tu apellido"
-                    value={formData.lastName}
-                    onChangeText={(value) => handleChange("lastName", value)}
-                    editable={!isLoading}
-                  />
-                </View>
+              <View style={[styles.buttonContainer, step === 1 && styles.buttonContainerCenter]}>
+                {step > 1 && (
+                  <TouchableOpacity
+                    style={[styles.button, styles.buttonSecondary]}
+                    onPress={handlePrevStep}
+                    disabled={isLoading}
+                  >
+                    <Text style={[styles.buttonText, styles.buttonTextSecondary]}>
+                      Anterior
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    step === 1 ? styles.buttonFullWidth : styles.buttonWithPrev
+                  ]}
+                  onPress={step === 3 ? handleSubmit : handleNextStep}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.buttonText}>
+                    {isLoading 
+                      ? "Procesando..." 
+                      : step === 3 
+                        ? "Crear Cuenta" 
+                        : "Siguiente"}
+                  </Text>
+                </TouchableOpacity>
               </View>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="tu@email.com"
-                  value={formData.email}
-                  onChangeText={(value) => handleChange("email", value)}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  editable={!isLoading}
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Contraseña</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Tu contraseña"
-                  value={formData.password}
-                  onChangeText={(value) => handleChange("password", value)}
-                  secureTextEntry
-                  editable={!isLoading}
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Confirmar Contraseña</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Confirma tu contraseña"
-                  value={formData.confirmPassword}
-                  onChangeText={(value) => handleChange("confirmPassword", value)}
-                  secureTextEntry
-                  editable={!isLoading}
-                />
-              </View>
-
-              <View style={styles.row}>
-                <View style={[styles.inputContainer, styles.halfWidth]}>
-                  <Text style={styles.label}>Peso (kg)</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="70"
-                    value={formData.weight}
-                    onChangeText={(value) => handleChange("weight", value)}
-                    keyboardType="numeric"
-                    editable={!isLoading}
-                  />
-                </View>
-
-                <View style={[styles.inputContainer, styles.halfWidth]}>
-                  <Text style={styles.label}>Altura (cm)</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="170"
-                    value={formData.height}
-                    onChangeText={(value) => handleChange("height", value)}
-                    keyboardType="numeric"
-                    editable={!isLoading}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Fecha de Nacimiento</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="DD/MM/AAAA"
-                  value={formData.birthDate}
-                  onChangeText={(value) => handleChange("birthDate", value)}
-                  editable={!isLoading}
-                />
-              </View>
-
-              <TouchableOpacity
-                style={[styles.button, isLoading && styles.buttonDisabled]}
-                onPress={handleSubmit}
-                disabled={isLoading}
-              >
-                <Text style={styles.buttonText}>
-                  {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
-                </Text>
-              </TouchableOpacity>
             </View>
           </View>
 
@@ -217,6 +436,7 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     marginVertical: 32,
+    marginBottom: -10,
   },
   logo: {
     width: 120,
@@ -255,6 +475,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
     textAlign: 'center',
+  },
+  stepIndicator: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 16,
+    gap: 8,
+  },
+  stepDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#e5e7eb',
+  },
+  stepDotActive: {
+    backgroundColor: '#22c55e',
+    width: 24,
+  },
+  stepDotCompleted: {
+    backgroundColor: '#22c55e',
   },
   cardContent: {
     marginBottom: 24,
@@ -298,6 +537,13 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  buttonWithPrev: {
+    flex: 1,
+  },
   button: {
     backgroundColor: '#22c55e',
     padding: 16,
@@ -306,6 +552,14 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.7,
+  },
+  buttonSecondary: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#22c55e',
+  },
+  buttonTextSecondary: {
+    color: '#22c55e',
   },
   buttonText: {
     color: 'white',
@@ -322,6 +576,68 @@ const styles = StyleSheet.create({
   footerLink: {
     color: '#22c55e',
     fontWeight: '500',
+  },
+  profileContainer: {
+    gap: 12,
+  },
+  profileButton: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    padding: 16,
+    backgroundColor: 'white',
+  },
+  profileButtonSelected: {
+    borderColor: '#22c55e',
+    backgroundColor: '#f0fdf4',
+  },
+  profileButtonText: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  profileButtonTextSelected: {
+    color: '#22c55e',
+    fontWeight: '500',
+  },
+  buttonContainerCenter: {
+    justifyContent: 'center',
+  },
+  buttonFullWidth: {
+    minWidth: 200,
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#111827',
+  },
+  datePlaceholder: {
+    fontSize: 16,
+    color: '#9ca3af',
+  },
+  glucoseValueText: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 8,
+  },
+  dateInput: {
+    flex: 2,
+  },
+  yearInput: {
+    flex: 3,
+  },
+  dateField: {
+    textAlign: 'center',
+  },
+  dateSeparator: {
+    fontSize: 18,
+    color: '#6b7280',
   },
 });
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
@@ -39,7 +39,11 @@ export default function ForgotPasswordPage() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>insulA</Text>
+          <Image
+            source={require('../assets/insula-logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
         
         <View style={styles.card}>
@@ -128,7 +132,10 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+  },
+  logo: {
+    width: 120,
+    height: 120,
   },
   logoText: {
     fontSize: 32,
