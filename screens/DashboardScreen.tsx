@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { Loader2, ArrowUp, ArrowDown, Check, Utensils, Syringe, Droplet, Plus, MessageCircle, Activity, Settings } from 'lucide-react-native';
 import { Feather } from '@expo/vector-icons';
@@ -62,6 +63,7 @@ const mockActivities: Activity[] = [
 
 
 export default function DashboardScreen() {
+  const navigation = useNavigation();
   const [openDialog, setOpenDialog] = useState(false);
   const [glucoseValue, setGlucoseValue] = useState('');
   const [notes, setNotes] = useState('');
@@ -133,7 +135,10 @@ export default function DashboardScreen() {
             <Activity width={32} height={32} color="#22c55e" />
             <Text style={styles.title}>Indicadores</Text>
           </View>
-          <TouchableOpacity style={styles.settingsButton}>
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            onPress={() => navigation.navigate('SettingsPage')}
+          >
             <Settings width={20} height={20} color="#4b5563" />
           </TouchableOpacity>
         </View>
