@@ -141,10 +141,12 @@ export default function ProfilePage() {
                                 </Text>
                             </View>
                             <View style={styles.infoRow}>
-                                <Text style={styles.infoLabel}>Fecha de Diagnóstico</Text>
-                                <Text style={styles.infoValue}>
-                                    {profileData?.medicalInfo?.diagnosisDate || '-'}
-                                </Text>
+                              <Text style={styles.infoLabel}>Fecha de Diagnóstico</Text>
+                              <Text style={styles.infoValue}>
+                                {profileData?.medicalInfo?.diagnosisDate 
+                                  ? new Date(profileData.medicalInfo.diagnosisDate).toLocaleDateString('es-ES')
+                                  : '-'}
+                              </Text>
                             </View>
                             <View style={styles.infoRow}>
                                 <Text style={styles.infoLabel}>Médico Tratante</Text>

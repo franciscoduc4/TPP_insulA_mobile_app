@@ -29,7 +29,7 @@ export default function SignupScreen() {
     glucoseProfile: "" as GlucoseProfile,
   });
   
-  const { register, isLoading, error: authError } = useAuth();
+  const { register, isLoading, error: authError, isAuthenticated } = useAuth();
   const [error, setError] = useState("");
   const navigation = useNavigation<SignupScreenNavigationProp>();
 
@@ -39,6 +39,16 @@ export default function SignupScreen() {
       setError(authError);
     }
   }, [authError]);
+
+  // Handle navigation based on authentication state
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Dashboard' }],
+      });
+    }
+  }, [isAuthenticated, navigation]);
 
   const validateStep = () => {
     switch (step) {

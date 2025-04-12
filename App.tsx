@@ -1,7 +1,11 @@
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ThemeProvider } from './components/theme-provider';
+import { ThemeProvider, navigationTheme } from './components/theme-provider';
+import { useAuth } from './hooks/use-auth';
+import { View, ActivityIndicator } from 'react-native';
+import { useEffect } from 'react';
 
 import DashboardScreen from './screens/DashboardScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -15,76 +19,95 @@ import { BackButton } from './components/back-button';
 
 const Stack = createNativeStackNavigator();
 
+function AuthStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false
+      }}
+    >
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Signup" component={SignupScreen} />
+      <Stack.Screen name="ForgotPasswordPage" component={ForgotPasswordPage} />
+    </Stack.Navigator>
+  );
+}
+
+function AppStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerLeft: () => <BackButton />,
+        headerShadowVisible: false,
+      }}
+    >
+      <Stack.Screen
+        name="Dashboard"
+        component={DashboardScreen}
+        options={{
+          headerShown: false
+        }}
+      />
+      <Stack.Screen
+        name="Meals"
+        component={MealsPage}
+        options={{
+          headerShown: false
+        }}
+      />
+      <Stack.Screen
+        name="History"
+        component={HistoryPage}
+        options={{
+          headerShown: false
+        }}
+      />
+      <Stack.Screen
+        name="Insulin"
+        component={InsulinPage}
+        options={{
+          headerShown: false
+        }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={ProfilePage}
+        options={{
+          headerShown: false
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function LoadingScreen() {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" color="#22c55e" />
+    </View>
+  );
+}
+
 export default function App() {
+  const { isAuthenticated, isLoading, initialize } = useAuth();
+
+  // Initialize auth state when app loads
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <Stack.Navigator
-          initialRouteName="Login"
-          screenOptions={{
-            headerLeft: () => <BackButton />,
-            headerShadowVisible: false,
-          }}
-        >
-          <Stack.Screen 
-            name="Login" 
-            component={LoginScreen} 
-            options={{
-              headerShown: false
-            }}
-          />
-          <Stack.Screen 
-            name="Signup" 
-            component={SignupScreen} 
-            options={{
-              headerShown: false
-            }}
-          />
-          <Stack.Screen
-            name="Dashboard"
-            component={DashboardScreen}
-            options={{
-              headerShown: false
-            }}
-          />
-          <Stack.Screen
-            name="ForgotPasswordPage"
-            component={ForgotPasswordPage}
-            options={{
-              headerShown: false
-            }}
-          />
-          <Stack.Screen
-            name="Meals"
-            component={MealsPage}
-            options={{
-              headerShown: false
-            }}
-          />
-          <Stack.Screen
-            name="History"
-            component={HistoryPage}
-            options={{
-              headerShown: false
-            }}
-          />
-          <Stack.Screen
-            name="Insulin"
-            component={InsulinPage}
-            options={{
-              headerShown: false
-            }}
-          />
-          <Stack.Screen
-            name="Profile"
-            component={ProfilePage}
-            options={{
-              headerShown: false
-            }}
-          />
-        </Stack.Navigator>
-        <StatusBar style="auto" />
-      </ThemeProvider>
+      <NavigationContainer theme={navigationTheme}>
+        <ThemeProvider>
+          {isLoading ? (
+            <LoadingScreen />
+          ) : (
+            isAuthenticated ? <AppStack /> : <AuthStack />
+          )}
+        </ThemeProvider>
+      </NavigationContainer>
+      <StatusBar style="auto" />
     </SafeAreaProvider>
   );
 }

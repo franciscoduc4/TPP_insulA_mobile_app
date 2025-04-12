@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { DefaultTheme } from '@react-navigation/native';
 
 const paperTheme = {
   ...MD3LightTheme,
@@ -14,7 +14,7 @@ const paperTheme = {
   },
 };
 
-const navigationTheme = {
+export const navigationTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
@@ -33,9 +33,7 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children }: ThemeProviderProps) {
   return (
     <PaperProvider theme={paperTheme}>
-      <NavigationContainer theme={navigationTheme}>
-        {children}
-      </NavigationContainer>
+      {children}
     </PaperProvider>
   );
 }

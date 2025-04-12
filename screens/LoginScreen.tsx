@@ -17,7 +17,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login, isLoading, error: authError } = useAuth();
+  const { login, isLoading, error: authError, isAuthenticated } = useAuth();
   const navigation = useNavigation<LoginScreenNavigationProp>();
 
   // Update error message if authError changes
@@ -27,6 +27,16 @@ export default function LoginScreen() {
     }
   }, [authError]);
 
+  // Handle navigation based on authentication state
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Dashboard' }],
+      });
+    }
+  }, [isAuthenticated, navigation]);
+
   const handleSubmit = async () => {
     if (!email || !password) {
       setError("Por favor ingresa email y contraseña");
@@ -34,9 +44,7 @@ export default function LoginScreen() {
     }
 
     try {
-      // Use the login function from useAuth
       await login(email, password);
-      navigation.navigate('Dashboard');
     } catch (err) {
       // Error is handled by useAuth and displayed through the error state
     }

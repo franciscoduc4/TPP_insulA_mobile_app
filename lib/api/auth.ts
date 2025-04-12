@@ -1,7 +1,7 @@
 import { GlucoseProfile } from '../../types';
 
 // Replace 'your-ip' with your computer's local IP address (e.g., '192.168.1.100')
-const API_URL = 'http://192.168.0.108:3000/api';  // You need to change 'your-ip' to your computer's IP address
+const API_URL = 'http://192.168.1.13:3000/api';  // You need to change 'your-ip' to your computer's IP address
 
 // Types
 export interface RegisterUserInput {
