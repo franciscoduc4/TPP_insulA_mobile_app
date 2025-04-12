@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Image } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Image, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useAuth } from "../hooks/use-auth";
 
 type RootStackParamList = {
   Login: undefined;
@@ -16,21 +17,28 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const { login, isLoading, error: authError } = useAuth();
   const navigation = useNavigation<LoginScreenNavigationProp>();
 
+  // Update error message if authError changes
+  useEffect(() => {
+    if (authError) {
+      setError(authError);
+    }
+  }, [authError]);
+
   const handleSubmit = async () => {
-    setIsLoading(true);
-    setError("");
+    if (!email || !password) {
+      setError("Por favor ingresa email y contraseña");
+      return;
+    }
 
     try {
-      // Simulación de login
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Use the login function from useAuth
+      await login(email, password);
       navigation.navigate('Dashboard');
-    } catch (error) {
-      setError("Credenciales inválidas. Por favor, intenta de nuevo.");
-    } finally {
-      setIsLoading(false);
+    } catch (err) {
+      // Error is handled by useAuth and displayed through the error state
     }
   };
 

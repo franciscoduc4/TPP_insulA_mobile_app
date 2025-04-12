@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Image } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Image, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { GlucoseProfile } from "../types";
+import { useAuth } from "../hooks/use-auth";
 
 type RootStackParamList = {
   Login: undefined;
@@ -10,8 +12,6 @@ type RootStackParamList = {
 };
 
 type SignupScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Signup'>;
-
-type GlucoseProfile = 'hypo' | 'hyper' | 'normal';
 
 export default function SignupScreen() {
   const [step, setStep] = useState(1);
@@ -28,9 +28,17 @@ export default function SignupScreen() {
     height: "",
     glucoseProfile: "" as GlucoseProfile,
   });
+  
+  const { register, isLoading, error: authError } = useAuth();
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation<SignupScreenNavigationProp>();
+
+  // Update error message if authError changes
+  useEffect(() => {
+    if (authError) {
+      setError(authError);
+    }
+  }, [authError]);
 
   const validateStep = () => {
     switch (step) {
@@ -92,18 +100,46 @@ export default function SignupScreen() {
   const handleSubmit = async () => {
     if (!validateStep()) return;
     
-    setIsLoading(true);
-    setError("");
-
     try {
-      // Simulación de registro
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      navigation.navigate('Dashboard');
+      console.log('Starting registration process...');
+      // Convert string values to numbers
+      const userData = {
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        birthDay: parseInt(formData.birthDay),
+        birthMonth: parseInt(formData.birthMonth),
+        birthYear: parseInt(formData.birthYear),
+        weight: parseFloat(formData.weight),
+        height: parseFloat(formData.height),
+        glucoseProfile: formData.glucoseProfile,
+      };
+
+      console.log('Registration data:', JSON.stringify(userData, null, 2));
+      console.log('Attempting to register user...');
+
+      // Use the register function from useAuth
+      await register(userData);
+      
+      console.log('Registration successful!');
+      Alert.alert(
+        "Cuenta creada",
+        "¡Tu cuenta ha sido creada exitosamente!",
+        [{ text: "OK", onPress: () => navigation.navigate('Dashboard') }]
+      );
     } catch (err) {
+      console.error('Registration error:', err);
+      if (err instanceof Error) {
+        console.error('Error details:', {
+          message: err.message,
+          stack: err.stack,
+          name: err.name
+        });
+      }
       const errorMessage = err instanceof Error ? err.message : "Error al crear la cuenta. Por favor, intenta de nuevo.";
+      console.error('Error message to display:', errorMessage);
       setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
