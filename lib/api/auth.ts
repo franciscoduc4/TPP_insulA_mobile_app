@@ -1,7 +1,7 @@
 import { GlucoseProfile } from '../../types';
 
 // Replace 'your-ip' with your computer's local IP address (e.g., '192.168.1.100')
-const API_URL = 'http://192.168.1.13:3000/api';  // You need to change 'your-ip' to your computer's IP address
+const API_URL = 'http://192.168.0.108:3000/api';  // You need to change 'your-ip' to your computer's IP address
 
 // Types
 export interface RegisterUserInput {
@@ -37,6 +37,28 @@ export interface UserResponse {
   glucoseTarget?: {
     minTarget: number;
     maxTarget: number;
+  };
+}
+
+export interface MedicalInfo {
+  diabetesType: 'type1';
+  diagnosisDate: string;
+  treatingDoctor: string;
+}
+
+export interface ProfileResponse extends UserResponse {
+  medicalInfo: MedicalInfo;
+  imageUrl?: string;
+}
+
+export interface UpdateProfileInput {
+  firstName?: string;
+  lastName?: string;
+  weight?: number;
+  height?: number;
+  medicalInfo?: {
+    diagnosisDate?: string;
+    treatingDoctor?: string;
   };
 }
 
@@ -102,7 +124,8 @@ export const loginUser = async (credentials: LoginInput): Promise<UserResponse> 
   return data;
 };
 
-export const getUserProfile = async (token: string): Promise<UserResponse> => {
+export const getUserProfile = async (token: string): Promise<ProfileResponse> => {
+  console.log('Fetching user profile...');
   const response = await fetch(`${API_URL}/users/profile`, {
     method: 'GET',
     headers: {
@@ -112,6 +135,7 @@ export const getUserProfile = async (token: string): Promise<UserResponse> => {
   });
 
   const data = await response.json();
+  console.log('Profile data received:', data);
 
   if (!response.ok) {
     throw new Error(data.message || 'Failed to fetch user profile');
@@ -120,7 +144,8 @@ export const getUserProfile = async (token: string): Promise<UserResponse> => {
   return data;
 };
 
-export const updateUserProfile = async (userData: Partial<RegisterUserInput>, token: string): Promise<UserResponse> => {
+export const updateUserProfile = async (userData: UpdateProfileInput, token: string): Promise<ProfileResponse> => {
+  console.log('Updating user profile:', userData);
   const response = await fetch(`${API_URL}/users/profile`, {
     method: 'PUT',
     headers: {
@@ -131,6 +156,7 @@ export const updateUserProfile = async (userData: Partial<RegisterUserInput>, to
   });
 
   const data = await response.json();
+  console.log('Profile update response:', data);
 
   if (!response.ok) {
     throw new Error(data.message || 'Failed to update user profile');
@@ -139,10 +165,32 @@ export const updateUserProfile = async (userData: Partial<RegisterUserInput>, to
   return data;
 };
 
+export const updateProfileImage = async (imageUrl: string, token: string): Promise<ProfileResponse> => {
+  console.log('Updating profile image:', imageUrl);
+  const response = await fetch(`${API_URL}/users/profile/image`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ imageUrl }),
+  });
+
+  const data = await response.json();
+  console.log('Profile image update response:', data);
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to update profile image');
+  }
+
+  return data;
+};
+
 export const updateGlucoseTarget = async (
   targetData: { minTarget: number; maxTarget: number }, 
   token: string
-) => {
+): Promise<ProfileResponse> => {
+  console.log('Updating glucose target:', targetData);
   const response = await fetch(`${API_URL}/users/glucose-target`, {
     method: 'PUT',
     headers: {
@@ -153,6 +201,7 @@ export const updateGlucoseTarget = async (
   });
 
   const data = await response.json();
+  console.log('Glucose target update response:', data);
 
   if (!response.ok) {
     throw new Error(data.message || 'Failed to update glucose target');

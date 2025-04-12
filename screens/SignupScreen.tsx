@@ -433,7 +433,7 @@ export default function SignupScreen() {
                   disabled={isLoading}
                 >
                   <Text style={styles.buttonText}>
-                    {isLoading 
+                    {isLoading
                       ? "Procesando..." 
                       : step === 3 
                         ? "Crear Cuenta" 

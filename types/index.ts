@@ -12,6 +12,12 @@ export interface GlucoseTarget {
   maxTarget: number;
 }
 
+export interface MedicalInfo {
+  diabetesType: 'type1';
+  diagnosisDate: string;
+  treatingDoctor: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -24,4 +30,5 @@ export interface User {
   height: number;
   glucoseProfile: GlucoseProfile;
   glucoseTarget?: GlucoseTarget;
+  medicalInfo?: MedicalInfo;
 }

@@ -1,73 +1,91 @@
 import React from 'react';
-import { TouchableOpacity, Image, StyleSheet, View } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
+import { Camera } from 'lucide-react-native';
 
 interface ProfilePhotoProps {
-  imageUri: string | null;
-  onImageChange: (uri: string) => void;
+    imageUri: string | null;
+    onImageChange: (uri: string) => void;
 }
 
-export const ProfilePhoto = ({ imageUri, onImageChange }: ProfilePhotoProps) => {
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+export function ProfilePhoto({ imageUri, onImageChange }: ProfilePhotoProps) {
+    const pickImage = async () => {
+        try {
+            // Request permissions
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permiso denegado', 'Necesitamos acceso a tu galería para cambiar la foto de perfil.');
+                return;
+            }
 
-    if (!result.canceled && result.assets[0].uri) {
-      onImageChange(result.assets[0].uri);
-    }
-  };
+            // Launch image picker
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.8,
+            });
 
-  return (
-    <TouchableOpacity style={styles.container} onPress={pickImage}>
-      {imageUri ? (
-        <Image source={{ uri: imageUri }} style={styles.image} />
-      ) : (
-        <FontAwesome name="user-circle" size={100} color="#d1d5db" />
-      )}
-      <View style={styles.cameraIconContainer}>
-        <FontAwesome5 name="camera" size={16} color="white" />
-      </View>
-    </TouchableOpacity>
-  );
-};
+            if (!result.canceled && result.assets[0].uri) {
+                // Here you would typically upload the image to your server first
+                // For now, we'll just pass the local URI
+                onImageChange(result.assets[0].uri);
+            }
+        } catch (error) {
+            console.error('Error picking image:', error);
+            Alert.alert('Error', 'No se pudo seleccionar la imagen');
+        }
+    };
+
+    return (
+        <TouchableOpacity onPress={pickImage} style={styles.container}>
+            {imageUri ? (
+                <Image source={{ uri: imageUri }} style={styles.avatar} />
+            ) : (
+                <View style={styles.placeholderContainer}>
+                    <Camera size={40} color="#9ca3af" />
+                </View>
+            )}
+            <View style={styles.editBadge}>
+                <Camera size={16} color="white" />
+            </View>
+        </TouchableOpacity>
+    );
+}
 
 const styles = StyleSheet.create({
-  container: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#f3f4f6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#22c55e',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  cameraIconContainer: {
-    position: 'absolute',
-    bottom: 8,
-    right: 8,
-    backgroundColor: '#22c55e',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'white',
-  },
+    container: {
+        position: 'relative',
+        width: 100,
+        height: 100,
+        marginBottom: 16,
+    },
+    avatar: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 50,
+    },
+    placeholderContainer: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 50,
+        backgroundColor: '#f3f4f6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+    },
+    editBadge: {
+        position: 'absolute',
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#22c55e',
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: 'white',
+    },
 });
