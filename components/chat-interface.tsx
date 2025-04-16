@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, Modal, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Button } from './ui/button';
+import { Button } from './ui/button'; 
 
 // Types for our chat messages
 type MessageType = {
