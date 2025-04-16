@@ -93,6 +93,7 @@ export default function DailyPatternChart({ data }: DailyPatternChartProps) {
               borderRadius: 8
             }}
             yAxisSuffix=" mg/dL"
+            yAxisLabel=""  // Adding required yAxisLabel prop
           />
         </View>
       </CardContent>

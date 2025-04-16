@@ -1,11 +1,21 @@
 "use client"
 
+import React from "react"
+import { View, Text } from "react-native"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { Card } from "@/components/ui/card"
 
 interface BloodGlucoseChartProps {
   data: Array<{ date: string; glucose: number }>
   timeRange: string
+}
+
+// Define tooltip payload type
+interface TooltipPayload {
+  payload: {
+    date: string;
+    glucose: number;
+  };
 }
 
 export function BloodGlucoseChart({ data, timeRange }: BloodGlucoseChartProps) {
@@ -30,13 +40,13 @@ export function BloodGlucoseChart({ data, timeRange }: BloodGlucoseChartProps) {
         <XAxis dataKey="date" tickFormatter={formatXAxis} />
         <YAxis domain={[60, 200]} />
         <Tooltip
-          content={({ active, payload }) => {
+          content={({ active, payload }: { active?: boolean; payload?: TooltipPayload[] }) => {
             if (active && payload && payload.length) {
               const data = payload[0].payload
               return (
-                <Card className="p-2">
-                  <p className="font-bold">{formatXAxis(data.date)}</p>
-                  <p>{`Glucosa: ${data.glucose} mg/dL`}</p>
+                <Card style={{ padding: 8 }}>
+                  <Text style={{ fontWeight: 'bold' }}>{formatXAxis(data.date)}</Text>
+                  <Text>{`Glucosa: ${data.glucose} mg/dL`}</Text>
                 </Card>
               )
             }

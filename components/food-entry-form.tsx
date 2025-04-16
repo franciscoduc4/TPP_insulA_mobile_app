@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image as RNImage } from "react-native";
-import * as Form from "react-hook-form";
+import { useForm, Controller, Control, FieldError, ControllerRenderProps } from "react-hook-form";
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, Image as GalleryIcon } from 'lucide-react-native';
 import tw from '../styles/theme';
@@ -27,10 +27,10 @@ type FormData = {
 };
 
 type ControlledInputProps = {
-  control: any;
+  control: Control<FormData>;
   name: keyof FormData;
   label: string;
-  error?: any;
+  error?: FieldError;
   placeholder?: string;
   keyboardType?: "default" | "numeric";
 }
@@ -45,14 +45,14 @@ const ControlledInput = ({
 }: ControlledInputProps) => (
   <View style={tw`mb-4`}>
     <Text style={tw`text-sm font-medium mb-2 text-text-primary`}>{label}</Text>
-    <Form.Controller
+    <Controller
       control={control}
       name={name}
       rules={{ required: "Este campo es requerido" }}
-      render={({ field }: Form.ControllerRenderProps<FormData>) => (
+      render={({ field }) => (
         <TextInput
           style={tw`border border-gray-300 rounded-lg p-2.5 text-base`}
-          onChangeText={(text: string) => field.onChange(text)}
+          onChangeText={field.onChange}
           onBlur={field.onBlur}
           value={field.value}
           keyboardType={keyboardType}
@@ -66,7 +66,7 @@ const ControlledInput = ({
 
 export function FoodEntryForm({ onSubmit, onCancel }: FoodEntryFormProps) {
   const [photo, setPhoto] = useState<string>();
-  const { control, handleSubmit, formState: { errors } } = Form.useForm<FormData>({
+  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       name: "",
       carbs: "",
