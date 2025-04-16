@@ -1,19 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { Loader2, ArrowUp, ArrowDown, Check, Utensils, Syringe, Droplet, Plus, MessageCircle, Activity, Settings } from 'lucide-react-native';
 import { Feather } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
 import { ChatInterface } from "../components/chat-interface";
 import { Footer } from "../components/footer";
+import { LoadingSpinner } from "../components/loading-spinner";
+
+// Define the navigation route types
+type RootStackParamList = {
+  SettingsPage: undefined;
+  HistoryPage: undefined;
+  ProfilePage: undefined;
+  MealsPage: undefined;
+  InsulinPage: undefined;
+  TrendsPage: undefined;
+  // Add other screens here as needed
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface GlucoseReading {
   value: number;
   timestamp: Date | null;
 }
 
-interface Activity {
+interface ActivityItem {
   type: 'glucose' | 'meal' | 'insulin';
   value?: number;
   mealType?: string;
@@ -31,7 +46,7 @@ const mockGlucoseReadings: GlucoseReading[] = [
   { value: 132, timestamp: null }
 ];
 
-const mockActivities: Activity[] = [
+const mockActivities: ActivityItem[] = [
   {
     type: 'glucose',
     value: 142,
@@ -61,15 +76,15 @@ const mockActivities: Activity[] = [
   }
 ];
 
-
 export default function DashboardScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const [openDialog, setOpenDialog] = useState(false);
   const [glucoseValue, setGlucoseValue] = useState('');
   const [notes, setNotes] = useState('');
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [readings, setReadings] = useState<GlucoseReading[]>(mockGlucoseReadings);
-  const [activities, setActivities] = useState<Activity[]>(mockActivities);
+  const [activities, setActivities] = useState<ActivityItem[]>(mockActivities);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const now = new Date();
@@ -129,235 +144,240 @@ export default function DashboardScreen() {
 
   return (
     <View style={styles.pageContainer}>
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.titleContainer}>
-            <Activity width={32} height={32} color="#22c55e" />
-            <Text style={styles.title}>Indicadores</Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.settingsButton}
-            onPress={() => navigation.navigate('SettingsPage')}
-          >
-            <Settings width={20} height={20} color="#4b5563" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.statusContainer}>
-          <View style={styles.statusIndicator}>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(glucoseStatus).backgroundColor }]}>
-              <Text style={[styles.statusText, { color: getStatusColor(glucoseStatus).color }]}>
-                {glucoseStatus}
-              </Text>
+      {isLoading ? (
+        <LoadingSpinner text="Cargando datos..." />
+      ) : (
+        <ScrollView style={styles.container}>
+          <View style={styles.header}>
+            <View style={styles.titleContainer}>
+              <Activity width={32} height={32} color="#22c55e" />
+              <Text style={styles.title}>Indicadores</Text>
             </View>
-            <Text style={styles.statusDescription}>
-              {currentGlucose >= 80 && currentGlucose <= 140 
-                ? 'En rango saludable' 
-                : 'Fuera de rango objetivo'}
-            </Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.addButton}
-            onPress={() => setOpenDialog(true)}
-          >
-            <Plus width={16} height={16} color="white" />
-            <Text style={styles.addButtonText}>Agregar Lectura</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Glucosa Actual</Text>
-            <Text style={styles.timestamp}>Actualizado {lastUpdated}</Text>
-          </View>
-          
-          <View style={styles.glucoseDisplay}>
-            <View style={styles.glucoseValue}>
-              <Text style={styles.glucoseNumber}>{currentGlucose}</Text>
-              <Text style={styles.glucoseUnit}>mg/dL</Text>
-              <View style={styles.glucoseDiff}>
-                {glucoseDiff < 0 ? (
-                  <View style={styles.diffContainer}>
-                    <ArrowDown width={16} height={16} color="#22c55e" />
-                    <Text style={styles.diffTextGreen}>{Math.abs(glucoseDiff)} mg/dL</Text>
-                  </View>
-                ) : glucoseDiff > 0 ? (
-                  <View style={styles.diffContainer}>
-                    <ArrowUp width={16} height={16} color="#f97316" />
-                    <Text style={styles.diffTextOrange}>{glucoseDiff} mg/dL</Text>
-                  </View>
-                ) : (
-                  <View style={styles.diffContainer}>
-                    <Check width={16} height={16} color="#22c55e" />
-                    <Text style={styles.diffTextGreen}>Estable</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-            <View style={styles.iconContainer}>
-              <Droplet width={24} height={24} color="#22c55e" />
-            </View>
-          </View>
-
-          <View style={styles.chartContainer}>
-            <View style={styles.chart}>
-              {readings.slice(0, 6).reverse().map((reading, index) => {
-                const max = Math.max(...readings.map(r => r.value));
-                const min = Math.min(...readings.map(r => r.value));
-                const range = max - min || 1;
-                const height = ((reading.value - min) / range) * 70 + 10;
-                
-                return (
-                  <View key={index} style={styles.chartBar}>
-                    <View 
-                      style={[
-                        styles.bar,
-                        { 
-                          height: `${height}%`,
-                          backgroundColor: reading.value >= 80 && reading.value <= 140 
-                            ? 'rgba(34, 197, 94, 0.2)' 
-                            : '#ffedd5'
-                        }
-                      ]}
-                    >
-                      <Text style={styles.barValue}>{reading.value}</Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.statsGrid}>
-          <View style={styles.statsCard}>
-            <Text style={styles.statsLabel}>Promedio Diario</Text>
-            <View style={styles.statsValue}>
-              <Text style={styles.statsNumber}>{averageGlucose}</Text>
-              <Text style={styles.statsUnit}>mg/dL</Text>
-            </View>
-            <View style={styles.statsIndicator}>
-              <Check width={12} height={12} color="#22c55e" />
-              <Text style={styles.statsStatus}>
-                {averageGlucose >= 80 && averageGlucose <= 140 
-                  ? 'En rango objetivo' 
-                  : 'Fuera de rango'}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.activityCard}>
-          <View style={styles.activityHeader}>
-            <Text style={styles.activityTitle}>Actividad Reciente</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAllLink}>Ver todo</Text>
+            <TouchableOpacity 
+              style={styles.settingsButton}
+              onPress={() => navigation.navigate('SettingsPage')}
+            >
+              <Settings width={20} height={20} color="#4b5563" />
             </TouchableOpacity>
           </View>
-          
-          <View style={styles.activityList}>
-            {activities.map((activity, index) => (
-              <View key={index} style={styles.activityItem}>
-                <View style={styles.activityLeft}>
-                  <View style={[
-                    styles.activityIcon,
-                    { 
-                      backgroundColor: activity.type === 'glucose' 
-                        ? 'rgba(34, 197, 94, 0.1)'
-                        : activity.type === 'meal'
-                        ? '#ffedd5'
-                        : '#dbeafe'
-                    }
-                  ]}>
-                    {activity.type === 'glucose' && <Droplet width={16} height={16} color="#22c55e" />}
-                    {activity.type === 'meal' && <Utensils width={16} height={16} color="#f97316" />}
-                    {activity.type === 'insulin' && <Syringe width={16} height={16} color="#3b82f6" />}
-                  </View>
-                  <View>
-                    <Text style={styles.activityName}>
-                      {activity.type === 'glucose' && 'Lectura de glucosa'}
-                      {activity.type === 'meal' && activity.mealType}
-                      {activity.type === 'insulin' && 'Dosis de insulina'}
-                    </Text>
-                    <Text style={styles.activityTime}>
-                      {activity.timestamp 
-                        ? formatDistanceToNow(activity.timestamp, { addSuffix: true })
-                        : ''}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.activityValue}>
-                  {activity.type === 'glucose' && `${activity.value} mg/dL`}
-                  {activity.type === 'meal' && `${activity.carbs}g carbohidratos`}
-                  {activity.type === 'insulin' && `${activity.units} unidades`}
+
+          <View style={styles.statusContainer}>
+            <View style={styles.statusIndicator}>
+              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(glucoseStatus).backgroundColor }]}>
+                <Text style={[styles.statusText, { color: getStatusColor(glucoseStatus).color }]}>
+                  {glucoseStatus}
                 </Text>
               </View>
-            ))}
-          </View>
-        </View>
-
-        <Modal
-          visible={openDialog}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setOpenDialog(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Agregar Lectura de Glucosa</Text>
-              <Text style={styles.modalDescription}>
-                Ingresa tu lectura actual de glucosa para hacer seguimiento.
+              <Text style={styles.statusDescription}>
+                {currentGlucose >= 80 && currentGlucose <= 140 
+                  ? 'En rango saludable' 
+                  : 'Fuera de rango objetivo'}
               </Text>
-              
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Lectura de Glucosa (mg/dL)</Text>
-                <TextInput
-                  style={styles.input}
-                  value={glucoseValue}
-                  onChangeText={setGlucoseValue}
-                  keyboardType="numeric"
-                  placeholder="Ingresa tu lectura"
-                />
+            </View>
+            <TouchableOpacity 
+              style={styles.addButton}
+              onPress={() => setOpenDialog(true)}
+            >
+              <Plus width={16} height={16} color="white" />
+              <Text style={styles.addButtonText}>Agregar Lectura</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>Glucosa Actual</Text>
+              <Text style={styles.timestamp}>Actualizado {lastUpdated}</Text>
+            </View>
+            
+            <View style={styles.glucoseDisplay}>
+              <View style={styles.glucoseValue}>
+                <Text style={styles.glucoseNumber}>{currentGlucose}</Text>
+                <Text style={styles.glucoseUnit}>mg/dL</Text>                
+                <View style={styles.glucoseDiff}>
+                  {glucoseDiff < 0 ? (
+                    <View style={styles.diffContainer}>
+                      <ArrowDown width={16} height={16} color="#22c55e" />
+                      <Text style={styles.diffTextGreen}>{Math.abs(glucoseDiff)} mg/dL</Text>
+                    </View>
+                  ) : glucoseDiff > 0 ? (
+                    <View style={styles.diffContainer}>
+                      <ArrowUp width={16} height={16} color="#f97316" />
+                      <Text style={styles.diffTextOrange}>{glucoseDiff} mg/dL</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.diffContainer}>
+                      <Check width={16} height={16} color="#22c55e" />
+                      <Text style={styles.diffTextGreen}>Estable</Text>
+                    </View>
+                  )}
+                </View>
               </View>
-              
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Notas (opcional)</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={notes}
-                  onChangeText={setNotes}
-                  multiline
-                  numberOfLines={4}
-                  placeholder="Agrega comentarios sobre esta lectura"
-                />
+              <View style={styles.iconContainer}>
+                <Droplet width={24} height={24} color="#22c55e" />
               </View>
-              
-              <View style={styles.modalFooter}>
-                <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={() => setOpenDialog(false)}
-                >
-                  <Text style={styles.cancelButtonText}>Cancelar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.submitButton}
-                  onPress={handleSubmit}
-                >
-                  <Text style={styles.submitButtonText}>Guardar Lectura</Text>
-                </TouchableOpacity>
+            </View>
+
+            <View style={styles.chartContainer}>
+              <View style={styles.chart}>
+                {readings.slice(0, 6).reverse().map((reading, index) => {
+                  const max = Math.max(...readings.map(r => r.value));
+                  const min = Math.min(...readings.map(r => r.value));
+                  const range = max - min || 1;
+                  const height = ((reading.value - min) / range) * 70 + 10;
+                  
+                  return (
+                    <View key={index} style={styles.chartBar}>
+                      <View 
+                        style={[
+                          styles.bar,
+                          { 
+                            height: `${height}%`,
+                            backgroundColor: reading.value >= 80 && reading.value <= 140 
+                              ? 'rgba(34, 197, 94, 0.2)' 
+                              : '#ffedd5'
+                          }
+                        ]}
+                      >
+                        <Text style={styles.barValue}>{reading.value}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
             </View>
           </View>
-        </Modal>
 
-      </ScrollView>
+          <View style={styles.statsGrid}>
+            <View style={styles.statsCard}>
+              <Text style={styles.statsLabel}>Promedio Diario</Text>
+              <View style={styles.statsValue}>
+                <Text style={styles.statsNumber}>{averageGlucose}</Text>
+                <Text style={styles.statsUnit}>mg/dL</Text>
+              </View>
+              <View style={styles.statsIndicator}>
+                <Check width={12} height={12} color="#22c55e" />
+                <Text style={styles.statsStatus}>
+                  {averageGlucose >= 80 && averageGlucose <= 140 
+                    ? 'En rango objetivo' 
+                    : 'Fuera de rango'}
+                </Text>
+              </View>
+            </View>
+          </View>
 
-      <TouchableOpacity
-        style={styles.chatButton}
-        onPress={() => setIsChatOpen(true)}
-      >
-        <MessageCircle width={24} height={24} color="white" />
-      </TouchableOpacity>
+          <View style={styles.activityCard}>
+            <View style={styles.activityHeader}>
+              <Text style={styles.activityTitle}>Actividad Reciente</Text>
+              <TouchableOpacity>
+                <Text style={styles.viewAllLink}>Ver todo</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.activityList}>
+              {activities.map((activity, index) => (
+                <View key={index} style={styles.activityItem}>
+                  <View style={styles.activityLeft}>
+                    <View style={[
+                      styles.activityIcon,
+                      { 
+                        backgroundColor: activity.type === 'glucose' 
+                          ? 'rgba(34, 197, 94, 0.1)'
+                          : activity.type === 'meal'
+                          ? '#ffedd5'
+                          : '#dbeafe'
+                      }
+                    ]}>
+                      {activity.type === 'glucose' && <Droplet width={16} height={16} color="#22c55e" />}
+                      {activity.type === 'meal' && <Utensils width={16} height={16} color="#f97316" />}
+                      {activity.type === 'insulin' && <Syringe width={16} height={16} color="#3b82f6" />}
+                    </View>
+                    <View>
+                      <Text style={styles.activityName}>
+                        {activity.type === 'glucose' && 'Lectura de glucosa'}
+                        {activity.type === 'meal' && activity.mealType}
+                        {activity.type === 'insulin' && 'Dosis de insulina'}
+                      </Text>
+                      <Text style={styles.activityTime}>
+                        {activity.timestamp 
+                          ? formatDistanceToNow(activity.timestamp, { addSuffix: true })
+                          : ''}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.activityValue}>
+                    {activity.type === 'glucose' && `${activity.value} mg/dL`}
+                    {activity.type === 'meal' && `${activity.carbs}g carbohidratos`}
+                    {activity.type === 'insulin' && `${activity.units} unidades`}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <Modal
+            visible={openDialog}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setOpenDialog(false)}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Agregar Lectura de Glucosa</Text>
+                <Text style={styles.modalDescription}>
+                  Ingresa tu lectura actual de glucosa para hacer seguimiento.
+                </Text>
+                
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Lectura de Glucosa (mg/dL)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={glucoseValue}
+                    onChangeText={setGlucoseValue}
+                    keyboardType="numeric"
+                    placeholder="Ingresa tu lectura"
+                  />
+                </View>
+                
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Notas (opcional)</Text>
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    value={notes}
+                    onChangeText={setNotes}
+                    multiline
+                    numberOfLines={4}
+                    placeholder="Agrega comentarios sobre esta lectura"
+                  />
+                </View>
+                
+                <View style={styles.modalFooter}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => setOpenDialog(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleSubmit}
+                  >
+                    <Text style={styles.submitButtonText}>Guardar Lectura</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        </ScrollView>
+      )}
+
+      {!isLoading && (
+        <TouchableOpacity
+          style={styles.chatButton}
+          onPress={() => setIsChatOpen(true)}
+        >
+          <MessageCircle width={24} height={24} color="white" />
+        </TouchableOpacity>
+      )}
 
       <ChatInterface isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       <Footer />
