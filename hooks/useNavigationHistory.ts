@@ -1,13 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
 
+// Create a React Native compatible implementation
 export function useNavigationHistory() {
   const [history, setHistory] = useState<string[]>([])
-  const pathname = usePathname()
-
-  useEffect(() => {
+  
+  // Track navigation with a function instead of next/navigation
+  const addToHistory = (pathname: string) => {
     setHistory((prev) => {
       // Don't add the same path twice in a row
       if (prev[prev.length - 1] !== pathname) {
@@ -15,7 +15,7 @@ export function useNavigationHistory() {
       }
       return prev
     })
-  }, [pathname])
+  }
 
   const canGoBack = history.length > 1
 
@@ -26,6 +26,6 @@ export function useNavigationHistory() {
     return "/"
   }
 
-  return { canGoBack, getPreviousPath }
+  return { canGoBack, getPreviousPath, addToHistory }
 }
 

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { View, Text, Dimensions, StyleSheet } from "react-native";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { format, isValid } from "date-fns"
 import { es } from "date-fns/locale"
 import { BarChart } from 'react-native-chart-kit';
