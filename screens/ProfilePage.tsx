@@ -11,7 +11,7 @@ import { getUserProfile, updateProfileImage, ProfileResponse } from '../lib/api/
 type RootStackParamList = {
   Login: undefined;
   Settings: undefined;
-  EditProfile: undefined;
+  EditProfileScreen: undefined;
   Notifications: undefined;
 };
 
@@ -98,7 +98,7 @@ export default function ProfilePage() {
                         <View style={styles.card}>
                             <TouchableOpacity 
                                 style={styles.menuItem}
-                                onPress={() => navigation.navigate('EditProfile')}
+                                onPress={() => navigation.navigate('EditProfileScreen')}
                             >
                                 <View style={styles.menuItemLeft}>
                                     <User size={20} color="#6b7280" />
