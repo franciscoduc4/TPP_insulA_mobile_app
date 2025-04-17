@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Imag
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../hooks/use-auth";
+import auth from '@react-native-firebase/auth';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 type RootStackParamList = {
   Login: undefined;
@@ -19,6 +21,13 @@ export default function LoginScreen() {
   const [error, setError] = useState("");
   const { login, isLoading, error: authError, isAuthenticated } = useAuth();
   const navigation = useNavigation<LoginScreenNavigationProp>();
+
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: '345938546990-0uq4oq5nht5teo9vncf3an2b6hmnu1qo.apps.googleusercontent.com',
+      offlineAccess: true,
+    });
+  }, []);
 
   // Update error message if authError changes
   useEffect(() => {
@@ -53,6 +62,73 @@ export default function LoginScreen() {
   const handleDemoLogin = () => {
     setEmail("demo@example.com");
     setPassword("demo123");
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(""); // Clear any previous errors
+    try {
+      // Check if Google Play Services are available
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      
+      // Make sure any previous sign-in session is cleared to avoid state conflicts
+      await GoogleSignin.signOut();
+      
+      // Attempt to sign in - this will show the Google sign-in UI
+      const userInfo = await GoogleSignin.signIn();
+      
+      // Only proceed if we have a valid userInfo object
+      if (userInfo && userInfo.idToken) {
+        try {
+          // Get tokens only if sign-in was successful
+          const { accessToken } = await GoogleSignin.getTokens();
+          
+          // Create credential for Firebase authentication
+          const googleCredential = auth.GoogleAuthProvider.credential(userInfo.idToken, accessToken);
+          
+          // Sign in with Firebase
+          const userCredential = await auth().signInWithCredential(googleCredential);
+          
+          if (userCredential.user) {
+            // Success - the authentication hook will handle navigation
+            console.log('Google sign-in successful:', userCredential.user.email);
+          }
+        } catch (tokenError: any) {
+          console.error('Error getting tokens:', tokenError);
+          setError("Error de autenticación con Google: " + (tokenError.message || 'Error desconocido'));
+          await GoogleSignin.signOut();
+        }
+      }
+    } catch (error: any) {
+      // Handle specific error types
+      if (error.code === 'SIGN_IN_CANCELLED') {
+        console.log('User cancelled the sign-in flow');
+        // No need to show error for user cancellation
+      } else if (error.code === 'SIGN_IN_REQUIRED') {
+        console.log('No user signed in');
+        // Reset state but don't show error to user
+        await GoogleSignin.signOut();
+      } else if (error.code === 'PLAY_SERVICES_NOT_AVAILABLE') {
+        setError("Servicios de Google Play no disponibles");
+      } else if (error.message && error.message.includes('DEVELOPER_ERROR')) {
+        console.error('DEVELOPER_ERROR in Google Sign-In:', error);
+        setError(`Error de configuración: SHA-1 o configuración incorrecta en Firebase. 
+                 Por favor contacte al desarrollador.`);
+        
+        // Log additional information to help debugging
+        console.log('Using webClientId:', '345938546990-0uq4oq5nht5teo9vncf3an2b6hmnu1qo.apps.googleusercontent.com');
+        console.log('App package name:', 'com.anonymous.TPPInsulaApp');
+      } else {
+        console.error('Google Sign-In Error:', error);
+        setError("Error al iniciar sesión con Google: " + (error.message || 'Error desconocido'));
+        
+        // Ensure any ongoing sign-in process is properly cleaned up
+        try {
+          await GoogleSignin.signOut();
+        } catch (signOutError) {
+          console.log('Error signing out after failed login:', signOutError);
+        }
+      }
+    }
   };
 
   return (
@@ -105,6 +181,26 @@ export default function LoginScreen() {
                   secureTextEntry
                   editable={!isLoading}
                 />
+              </View>
+
+              <TouchableOpacity
+                style={styles.googleButton}
+                onPress={handleGoogleSignIn}
+                disabled={isLoading}
+              >
+                <Image 
+                  source={require('../assets/google-icon-PNG.png')}
+                  style={styles.googleIcon}
+                />
+                <Text style={styles.googleButtonText}>
+                  Continuar con Google
+                </Text>
+              </TouchableOpacity>
+
+              <View style={styles.orDivider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.orText}>O</Text>
+                <View style={styles.dividerLine} />
               </View>
 
               <TouchableOpacity 
@@ -240,6 +336,42 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  googleIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 12,
+  },
+  googleButtonText: {
+    color: '#111827',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  orDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#d1d5db',
+  },
+  orText: {
+    color: '#6b7280',
+    marginHorizontal: 12,
+    fontSize: 14,
   },
   forgotPasswordContainer: {
     alignItems: 'center',
