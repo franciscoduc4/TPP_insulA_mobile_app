@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:345938546990:android:763af6c9aa6817ea51eabf",
         "android_client_info": {
-          "package_name": "com.anonymous.TPPInsulaApp"
+          "package_name": "com.anonymous.insulA"
         }
       },
       "oauth_client": [
@@ -18,7 +18,7 @@
           "client_id": "345938546990-e0dbkh2jf8ccuch7qio5dski8jt7brsf.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.anonymous.TPPInsulaApp",
+            "package_name": "com.anonymous.insulA",
             "certificate_hash": "9aeefcddcb93e7d17a13c2872edc70d8441fd91c"
           }
         },
@@ -26,7 +26,7 @@
           "client_id": "345938546990-lqfdqbhfhp77ksidh44htoogt47qm8ub.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.anonymous.TPPInsulaApp",
+            "package_name": "com.anonymous.insulA",
             "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
           }
         },

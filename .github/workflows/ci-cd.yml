@@ -1,4 +1,4 @@
-name: TPP InsuliA Mobile App Pipeline
+name: TPP insulA mobile app pipeline
 
 on:
   push:

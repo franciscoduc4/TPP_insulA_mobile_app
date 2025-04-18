@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "TPPInsulaApp",
-    "slug": "TPPInsulaApp",
+    "name": "insulA",
+    "slug": "insulA",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/insula_logo_no_text.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/insula_logo_no_text.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,10 +17,10 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/insula_logo_no_text.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.TPPInsulaApp",
+      "package": "com.anonymous.insulA",
       "proguard": true,
       "buildTypes": {
         "release": {

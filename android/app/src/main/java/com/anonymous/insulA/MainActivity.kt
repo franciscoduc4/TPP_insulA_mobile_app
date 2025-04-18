@@ -1,4 +1,4 @@
-package com.anonymous.TPPInsulaApp
+package com.anonymous.insulA
 
 import android.os.Build
 import android.os.Bundle
